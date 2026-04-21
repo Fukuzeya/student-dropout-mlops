@@ -91,6 +91,8 @@ jobs:
       - name: TypeScript check (strict templates)
         run: npx ng build --configuration production --aot
 
+      - uses: docker/setup-buildx-action@v3
+
       - name: Build container (smoke)
         uses: docker/build-push-action@v6
         with:
