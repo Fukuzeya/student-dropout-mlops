@@ -40,5 +40,5 @@ def test_inference_schema_drops_target(synthetic_raw: pd.DataFrame) -> None:
 
 def test_feature_columns_count() -> None:
     cols = feature_columns()
-    # 35 features (36 columns – 1 target)
-    assert len(cols) == 35
+    # UCI dataset: 36 features + 1 target column; feature_columns() drops Target.
+    assert len(cols) == 36
