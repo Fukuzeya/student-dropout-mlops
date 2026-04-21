@@ -114,7 +114,6 @@ jobs:
     timeout-minutes: 15
     environment:
       name: production
-      url: http://${{ secrets.EC2_HOST }}:4200
     steps:
       - uses: actions/checkout@v4
 
