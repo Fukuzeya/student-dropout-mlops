@@ -37,7 +37,6 @@ from backend.app.core.metrics import (
     predictions_today,
     uptime_seconds,
 )
-from backend.app.core.security import TokenPayload, require_admin
 from backend.app.monitoring.drift import compute_drift, latest_report
 from backend.app.monitoring.retrain_runs import DRIFT_RUN_STORE, RetrainRun
 from backend.app.monitoring.retraining import run_retraining
@@ -323,7 +322,6 @@ def evaluation(settings: Annotated[Settings, Depends(get_settings)]) -> Evaluati
 )
 async def drift_auto_retrain(
     settings: Annotated[Settings, Depends(get_settings)],
-    _admin: Annotated[TokenPayload, Depends(require_admin)],
     file: Annotated[UploadFile, File(..., description="Production batch CSV")],
     threshold: float = Query(0.30, ge=0.0, le=1.0),
     force: bool = Query(False, description="Skip the drift gate and retrain unconditionally"),
@@ -602,7 +600,6 @@ def _run_drift_in_thread(
 )
 async def start_drift_auto_retrain(
     settings: Annotated[Settings, Depends(get_settings)],
-    _admin: Annotated[TokenPayload, Depends(require_admin)],
     file: Annotated[UploadFile, File(..., description="Production batch CSV")],
     threshold: float = Query(0.30, ge=0.0, le=1.0),
     force: bool = Query(False, description="Skip the drift gate and retrain unconditionally"),

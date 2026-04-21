@@ -30,7 +30,6 @@ from backend.app.api.v1.schemas import (
 )
 from backend.app.core.config import Settings, get_settings
 from backend.app.core.metrics import RETRAIN_TOTAL
-from backend.app.core.security import TokenPayload, require_admin
 from backend.app.monitoring.audit import read_audit
 from backend.app.monitoring.retrain_runs import RUN_STORE, RetrainRun
 from backend.app.monitoring.retraining import RetrainOutcome, run_retraining
@@ -103,7 +102,6 @@ def _execute_retrain(
 )
 def trigger_retrain(
     settings: Annotated[Settings, Depends(get_settings)],
-    _admin: Annotated[TokenPayload, Depends(require_admin)],
     trigger: str = Query("manual", description="Free-form provenance tag stored on the audit row"),
 ) -> RetrainResponse:
     outcome = _execute_retrain(settings=settings, trigger=trigger)
@@ -148,7 +146,6 @@ def _run_in_thread(run: RetrainRun, settings: Settings, trigger: str) -> None:
 )
 def start_retrain(
     settings: Annotated[Settings, Depends(get_settings)],
-    _admin: Annotated[TokenPayload, Depends(require_admin)],
     trigger: str = Query("manual", description="Provenance tag stored on the audit row"),
 ) -> RetrainRunStart:
     active = RUN_STORE.active()

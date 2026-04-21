@@ -180,10 +180,6 @@ export class MonitoringComponent implements OnInit, OnDestroy, AfterViewChecked 
       this.toast.error('No file selected', 'Choose a production batch CSV first.');
       return;
     }
-    if (!this.isAdmin()) {
-      this.toast.error('Admin login required', 'Sign in as admin to run drift-driven retraining.');
-      return;
-    }
 
     this.autoRetrainBusy.set(true);
     this.driftRun.set(null);

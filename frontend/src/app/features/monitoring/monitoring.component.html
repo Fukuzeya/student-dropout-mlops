@@ -168,9 +168,6 @@
           the API trains a challenger and promotes only if it beats the champion under the McNemar gate.
         </p>
       </div>
-      <span class="badge" [ngClass]="isAdmin() ? 'badge-graduate' : 'badge-neutral'">
-        {{ isAdmin() ? 'Admin' : 'Login required' }}
-      </span>
     </header>
 
     <div class="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -216,7 +213,7 @@
         <button
           type="button"
           class="btn-primary w-full"
-          [disabled]="autoRetrainBusy() || !autoRetrainFile() || !isAdmin()"
+          [disabled]="autoRetrainBusy() || !autoRetrainFile()"
           (click)="runAutoRetrain()"
         >
           {{ autoRetrainBusy() ? 'Running…' : 'Check drift & auto-retrain' }}
