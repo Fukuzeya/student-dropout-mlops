@@ -10,12 +10,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 
 from backend.app.api.v1.cohort import COHORT_CACHE
 from backend.app.api.v1.model_registry import MODEL_STORE
 from backend.app.api.v1.schemas import ScoredStudent
-from backend.app.core.security import require_api_key
 
 router = APIRouter(prefix="/students", tags=["students"])
 
@@ -24,7 +23,6 @@ router = APIRouter(prefix="/students", tags=["students"])
     "/scored",
     response_model=list[ScoredStudent],
     summary="Return the holdout cohort with dropout-risk predictions",
-    dependencies=[Depends(require_api_key)],
 )
 def scored_cohort() -> list[ScoredStudent]:
     if not MODEL_STORE.is_loaded():

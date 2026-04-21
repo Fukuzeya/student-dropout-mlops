@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import Annotated, Any
 
 import pandas as pd
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 
 from backend.app.api.v1.model_registry import MODEL_STORE, predict_one
 from backend.app.api.v1.schemas import (
@@ -24,7 +24,6 @@ from backend.app.core.metrics import (
     PREDICTION_TOTAL,
     record_prediction,
 )
-from backend.app.core.security import require_api_key
 from backend.app.interventions.recommender import recommend
 from backend.app.ml.schemas import PredictionFeaturesSchema, feature_columns
 
@@ -90,7 +89,6 @@ def _build_response(
     "",
     response_model=PredictionResponse,
     summary="Predict dropout risk for a single student",
-    dependencies=[Depends(require_api_key)],
 )
 def predict_single(payload: StudentFeatures) -> PredictionResponse:
     if not MODEL_STORE.is_loaded():
@@ -111,7 +109,6 @@ def predict_single(payload: StudentFeatures) -> PredictionResponse:
     "/batch",
     response_model=BatchPredictionResponse,
     summary="Predict dropout risk for a CSV upload",
-    dependencies=[Depends(require_api_key)],
 )
 async def predict_batch(file: Annotated[UploadFile, File(...)]) -> BatchPredictionResponse:
     if not MODEL_STORE.is_loaded():

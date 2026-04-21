@@ -99,7 +99,21 @@ def _from_metadata(settings: Settings) -> list[ModelRegistryEntry]:
 def list_models(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> list[ModelRegistryEntry]:
-    entries = _from_mlflow(settings)
-    if entries:
-        return entries
-    return _from_metadata(settings)
+    # MLflow typically only registers the champion. For presentation we want
+    # the full bake-off visible too, so we overlay leaderboard candidates
+    # from metadata.json as Archived entries and let any MLflow-registered
+    # stage (Production/Staging) take precedence on name collision.
+    mlflow_entries = _from_mlflow(settings) or []
+    metadata_entries = _from_metadata(settings)
+
+    seen: dict[str, ModelRegistryEntry] = {}
+    for entry in mlflow_entries:
+        seen[entry.name.lower()] = entry
+    for entry in metadata_entries:
+        key = entry.name.lower()
+        if key not in seen:
+            seen[key] = entry
+
+    merged = list(seen.values())
+    merged.sort(key=lambda e: e.macro_f1, reverse=True)
+    return merged

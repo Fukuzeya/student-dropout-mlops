@@ -1,9 +1,9 @@
 /**
- * Tailwind config — "Bank-grade" palette for the Student Dropout EWS.
+ * Tailwind config — University of Zimbabwe palette.
  *
  * Aesthetic anchors:
- *   - Surface  : Deep Slate (#0f172a) backgrounds, layered with #111827 / #1e293b
- *   - Brand    : Indigo Primary (#4f46e5) for actions and headings accents
+ *   - Surface  : UZ Navy (#0c2340) backgrounds, layered deeper/lighter
+ *   - Brand    : UZ Gold (#e89a3c) for accents and primary actions
  *   - Status   : Emerald (Graduate)  /  Amber (Enrolled)  /  Rose (Dropout)
  *   - Type     : Inter / Geist sans, strict scale (12 / 13 / 14 / 16 / 20 / 24 / 32)
  *
@@ -17,33 +17,33 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Surfaces — bank-portal canvas
+        // Surfaces — UZ navy canvas
         surface: {
-          950: "#0b1220",
-          900: "#0f172a", // primary canvas (Deep Slate)
-          850: "#111827",
-          800: "#1e293b",
-          700: "#273449",
-          600: "#334155",
-          500: "#475569",
-          400: "#64748b",
-          300: "#94a3b8",
-          200: "#cbd5e1",
-          100: "#e2e8f0",
-          50:  "#f1f5f9",
+          950: "#061529",
+          900: "#0c2340", // primary canvas (UZ Navy)
+          850: "#0f2c50",
+          800: "#143560",
+          700: "#1e4072",
+          600: "#2b4f85",
+          500: "#3f6096",
+          400: "#6b84ac",
+          300: "#95a8c4",
+          200: "#c1cedd",
+          100: "#dde5ef",
+          50:  "#eef2f8",
         },
-        // Brand — indigo primary
+        // Brand — UZ Gold
         brand: {
-          50:  "#eef2ff",
-          100: "#e0e7ff",
-          200: "#c7d2fe",
-          300: "#a5b4fc",
-          400: "#818cf8",
-          500: "#6366f1",
-          600: "#4f46e5", // primary
-          700: "#4338ca",
-          800: "#3730a3",
-          900: "#312e81",
+          50:  "#fdf5e8",
+          100: "#fbe7c4",
+          200: "#f7d08d",
+          300: "#f1b65c",
+          400: "#ec9f3f",
+          500: "#e89a3c", // primary (UZ gold)
+          600: "#d27d1f",
+          700: "#a85f16",
+          800: "#7e4610",
+          900: "#55300a",
         },
         // Status — semantic (Graduate / Enrolled / Dropout)
         status: {
@@ -91,14 +91,14 @@ module.exports = {
         // Subtle, layered — matches financial-portal feel
         "card":     "0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 1px 2px rgba(0, 0, 0, 0.4)",
         "card-lg":  "0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 24px rgba(0, 0, 0, 0.35)",
-        "ring-brand":   "0 0 0 1px rgba(79, 70, 229, 0.35), 0 0 0 4px rgba(79, 70, 229, 0.18)",
+        "ring-brand":   "0 0 0 1px rgba(232, 154, 60, 0.45), 0 0 0 4px rgba(232, 154, 60, 0.18)",
       },
       backgroundImage: {
         "grid-faint":
           "linear-gradient(to right, rgba(148,163,184,0.06) 1px, transparent 1px), " +
           "linear-gradient(to bottom, rgba(148,163,184,0.06) 1px, transparent 1px)",
         "panel-gradient":
-          "linear-gradient(180deg, rgba(99,102,241,0.06) 0%, rgba(15,23,42,0) 60%)",
+          "linear-gradient(180deg, rgba(232,154,60,0.07) 0%, rgba(12,35,64,0) 60%)",
       },
       backgroundSize: {
         grid: "32px 32px",

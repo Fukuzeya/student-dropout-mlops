@@ -42,12 +42,6 @@ import { ToastService } from '../../core/services/toast.service';
         </div>
 
         <div class="flex items-center gap-2">
-          @if (!auth.hasApiKey()) {
-            <a routerLink="/login" class="btn-secondary">
-              <span class="h-1.5 w-1.5 rounded-full bg-status-enrolled"></span>
-              Add API key
-            </a>
-          }
           @if (auth.isAuthenticated()) {
             <button type="button" class="btn-ghost" (click)="logout()">Sign out</button>
           } @else {

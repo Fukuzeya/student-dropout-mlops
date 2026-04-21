@@ -37,7 +37,7 @@ from backend.app.core.metrics import (
     predictions_today,
     uptime_seconds,
 )
-from backend.app.core.security import TokenPayload, require_admin, require_api_key
+from backend.app.core.security import TokenPayload, require_admin
 from backend.app.monitoring.drift import compute_drift, latest_report
 from backend.app.monitoring.retrain_runs import DRIFT_RUN_STORE, RetrainRun
 from backend.app.monitoring.retraining import run_retraining
@@ -223,7 +223,6 @@ def kpis(
     "/drift",
     response_model=DriftResponse,
     summary="Run a drift check against reference data",
-    dependencies=[Depends(require_api_key)],
 )
 async def run_drift(
     settings: Annotated[Settings, Depends(get_settings)],
@@ -272,7 +271,6 @@ def latest(settings: Annotated[Settings, Depends(get_settings)]) -> FileResponse
     "/evaluation",
     response_model=EvaluationSummary,
     summary="Unified rigor report (CIs, calibration, threshold, cost, fairness)",
-    dependencies=[Depends(require_api_key)],
 )
 def evaluation(settings: Annotated[Settings, Depends(get_settings)]) -> EvaluationSummary:
     if not settings.evaluation_report_path.exists():

@@ -27,17 +27,12 @@ import { environment } from '../../../environments/environment';
             </div>
           </div>
           <h1 class="text-3xl font-semibold tracking-tight text-white">
-            Production-grade dropout intelligence for African higher education.
+            Dropout intelligence for the University of Zimbabwe.
           </h1>
           <p class="text-sm text-surface-300 mt-4 leading-relaxed">
-            A bank-grade early-warning system: champion-vs-challenger gating, drift-aware retraining, SHAP-explained
-            risk scores, and intervention playbooks tuned for the University of Zimbabwe.
+            Early-warning scores, SHAP-explained risk factors, and intervention playbooks
+            for every student in the cohort.
           </p>
-          <ul class="mt-8 space-y-2 text-xs text-surface-400">
-            <li class="flex items-center gap-2"><span class="text-status-graduate">✓</span> 5-model bake-off · macro-F1 ≥ 0.85</li>
-            <li class="flex items-center gap-2"><span class="text-status-graduate">✓</span> DVC reproducible pipeline</li>
-            <li class="flex items-center gap-2"><span class="text-status-graduate">✓</span> MLflow registry · Evidently drift</li>
-          </ul>
         </div>
       </aside>
 
@@ -46,38 +41,13 @@ import { environment } from '../../../environments/environment';
         <div class="w-full max-w-md space-y-6">
           <header>
             <p class="text-2xs uppercase tracking-wider text-brand-300">Sign in</p>
-            <h2 class="text-2xl font-semibold tracking-tight text-white mt-1">Access the EWS console</h2>
+            <h2 class="text-2xl font-semibold tracking-tight text-white mt-1">Administrator sign-in</h2>
             <p class="text-sm text-surface-400 mt-1">
-              Read access requires an API key. Administrative actions (retrain, promote) require staff credentials.
+              Staff credentials are required for retraining and registry promotion.
             </p>
           </header>
 
-          <!-- API key form -->
           <section class="surface-card p-5 space-y-4">
-            <h3 class="section-title text-base">API key</h3>
-            <p class="section-subtitle">Used for all read endpoints. Stored locally in your browser.</p>
-            <div>
-              <label class="label" for="api-key">X-API-Key</label>
-              <input
-                id="api-key"
-                class="input font-mono"
-                type="password"
-                autocomplete="off"
-                placeholder="uz-ews-…"
-                [(ngModel)]="apiKey"
-              />
-            </div>
-            <button type="button" class="btn-primary w-full" (click)="saveApiKey()">Save API key</button>
-            @if (auth.hasApiKey()) {
-              <p class="text-2xs text-status-graduate">✓ API key stored. Read endpoints will authenticate automatically.</p>
-            }
-          </section>
-
-          <!-- JWT form -->
-          <section class="surface-card p-5 space-y-4">
-            <h3 class="section-title text-base">Administrator sign-in</h3>
-            <p class="section-subtitle">Required for monitoring, retraining, and registry promotion.</p>
-
             <form #f="ngForm" (ngSubmit)="login(f)" class="space-y-3">
               <div>
                 <label class="label" for="username">Username</label>
@@ -135,18 +105,8 @@ export class LoginComponent {
   readonly env = environment;
   readonly submitting = signal(false);
 
-  apiKey = this.auth.snapshot().apiKey ?? '';
   username = '';
   password = '';
-
-  saveApiKey(): void {
-    if (!this.apiKey.trim()) {
-      this.toast.warning('API key required', 'Paste your X-API-Key value to continue.');
-      return;
-    }
-    this.auth.setApiKey(this.apiKey);
-    this.toast.success('API key saved', 'Read endpoints will authenticate automatically.');
-  }
 
   login(form: NgForm): void {
     if (form.invalid) {
