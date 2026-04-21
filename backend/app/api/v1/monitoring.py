@@ -678,7 +678,6 @@ def _drift_run_to_status(
 )
 def drift_run_status(
     run_id: str,
-    _admin: Annotated[TokenPayload, Depends(require_admin)],
     tail: int = Query(200, ge=0, le=500),
 ) -> DriftRunStatus:
     run = DRIFT_RUN_STORE.get(run_id)
@@ -695,9 +694,7 @@ def drift_run_status(
     response_model=DriftRunStatus | None,
     summary="Currently in-flight drift run (if any), for reconnect-on-reload",
 )
-def drift_active_run(
-    _admin: Annotated[TokenPayload, Depends(require_admin)],
-) -> DriftRunStatus | None:
+def drift_active_run() -> DriftRunStatus | None:
     run = DRIFT_RUN_STORE.active()
     if run is None:
         return None
@@ -711,7 +708,6 @@ def drift_active_run(
 async def stream_drift_logs(
     run_id: str,
     request: Request,
-    _admin: Annotated[TokenPayload, Depends(require_admin)],
 ) -> StreamingResponse:
     run = DRIFT_RUN_STORE.get(run_id)
     if run is None:

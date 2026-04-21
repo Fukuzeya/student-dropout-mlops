@@ -75,7 +75,7 @@ export class SidebarComponent {
     { label: 'Dashboard', route: '/dashboard', icon: '◧', description: 'Risk intelligence overview' },
     { label: 'Students', route: '/students', icon: '◉', description: 'Cohort search & detail' },
     { label: 'Batch Predict', route: '/batch', icon: '⇪', description: 'Score CSV uploads' },
-    { label: 'Monitoring', route: '/monitoring', icon: '◔', description: 'Drift, health, KPIs', adminOnly: true },
+    { label: 'Monitoring', route: '/monitoring', icon: '◔', description: 'Drift, health, KPIs' },
     { label: 'Administration', route: '/admin', icon: '⚙', description: 'Retrain · Promote', adminOnly: true },
   ];
 

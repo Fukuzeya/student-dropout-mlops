@@ -23,10 +23,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       } else if (err.status === 401) {
         if (req.url.includes('/auth/token')) {
           toast.error('Sign-in failed', detail);
-        } else {
+        } else if (auth.isAuthenticated()) {
           toast.warning('Session expired', 'Please sign in again to continue.');
           auth.logout();
           router.navigate(['/login']);
+        } else {
+          toast.info('Sign-in required', 'This action requires admin credentials.');
         }
       } else if (err.status === 403) {
         toast.error('Forbidden', detail);

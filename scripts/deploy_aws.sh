@@ -16,6 +16,13 @@ if [ -f .env.deploy ]; then
   COMPOSE="$COMPOSE --env-file .env.deploy"
 fi
 
+echo "[deploy] ensuring writable bind-mount dirs…"
+# The API container runs as a non-root user (UID 1000 in the image) but the
+# host dirs are owned by ec2-user. Make them group-writable so retrain /
+# drift report writes succeed without UID gymnastics.
+sudo mkdir -p models/champion models/staging data/reference data/processed reports/drift mlruns
+sudo chmod -R a+rwX models data/reference data/processed reports mlruns
+
 echo "[deploy] pulling images…"
 $COMPOSE pull
 

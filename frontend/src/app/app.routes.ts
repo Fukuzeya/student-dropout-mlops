@@ -36,7 +36,6 @@ export const APP_ROUTES: Routes = [
       },
       {
         path: 'monitoring',
-        canActivate: [authGuard],
         loadComponent: () =>
           import('./features/monitoring/monitoring.component').then((m) => m.MonitoringComponent),
         title: 'Monitoring — UZ EWS',

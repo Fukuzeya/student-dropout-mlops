@@ -198,7 +198,6 @@ def _run_to_status(run: RetrainRun, *, include_logs: bool = True) -> RetrainRunS
 )
 def run_status(
     run_id: str,
-    _admin: Annotated[TokenPayload, Depends(require_admin)],
     tail: int = Query(200, ge=0, le=500, description="Number of recent log lines to include"),
 ) -> RetrainRunStatus:
     run = RUN_STORE.get(run_id)
@@ -214,9 +213,7 @@ def run_status(
     "/runs",
     summary="List recent retrain runs (newest first)",
 )
-def list_runs(
-    _admin: Annotated[TokenPayload, Depends(require_admin)],
-) -> dict[str, Any]:
+def list_runs() -> dict[str, Any]:
     runs = RUN_STORE.list()
     return {
         "n": len(runs),
@@ -229,9 +226,7 @@ def list_runs(
     response_model=RetrainRunStatus | None,
     summary="The in-flight retrain run (if any) so the UI can reconnect on reload",
 )
-def active_run(
-    _admin: Annotated[TokenPayload, Depends(require_admin)],
-) -> RetrainRunStatus | None:
+def active_run() -> RetrainRunStatus | None:
     run = RUN_STORE.active()
     if run is None:
         return None
@@ -245,7 +240,6 @@ def active_run(
 async def stream_logs(
     run_id: str,
     request: Request,
-    _admin: Annotated[TokenPayload, Depends(require_admin)],
 ) -> StreamingResponse:
     run = RUN_STORE.get(run_id)
     if run is None:
@@ -294,7 +288,6 @@ async def stream_logs(
 )
 def history(
     settings: Annotated[Settings, Depends(get_settings)],
-    _admin: Annotated[TokenPayload, Depends(require_admin)],
     limit: int = Query(50, ge=1, le=500),
 ) -> RetrainHistoryResponse:
     rows = read_audit(settings.retrain_history_path, limit=limit)
