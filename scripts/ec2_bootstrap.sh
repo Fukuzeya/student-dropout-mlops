@@ -49,6 +49,11 @@ fi
 # deploy workflow rsyncs those into $DEPLOY_DIR, but a first-time manual
 # bootstrap before any push needs them locally to run `dvc repro`.
 SRC_DIR="/opt/uz-dropout-src"
+# /opt is root-owned, so the parent has to be created as root with
+# ec2-user ownership *before* the unprivileged git clone.
+mkdir -p "$SRC_DIR"
+chown -R ec2-user:ec2-user "$SRC_DIR"
+
 if [ ! -d "$SRC_DIR/.git" ]; then
   echo "[bootstrap] cloning $REPO_URL → $SRC_DIR"
   sudo -u ec2-user git clone "$REPO_URL" "$SRC_DIR"
