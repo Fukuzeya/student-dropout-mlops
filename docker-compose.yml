@@ -1,0 +1,195 @@
+# =====================================================================
+# Single-command bring-up of the entire MLOps stack.
+#   docker compose up --build
+# Includes: Angular frontend, FastAPI, MLflow + Postgres,
+# Prometheus, and Grafana.
+# =====================================================================
+
+services:
+
+  # Postgres is no longer required (MLflow now uses SQLite). Kept behind a
+  # profile for anyone who wants to swap MLflow back to a Postgres backend.
+  postgres:
+    profiles: ["postgres"]
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mlflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mlflow}
+      POSTGRES_DB: ${POSTGRES_DB:-mlflow}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mlflow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.16.2
+    restart: unless-stopped
+    environment:
+      MLFLOW_BACKEND_STORE_URI: sqlite:////mlflow/mlflow.db
+    volumes:
+      - mlflow-db:/mlflow
+      - mlflow-artifacts:/mlartifacts
+    ports:
+      - "5000:5000"
+    # Use MLflow's artifact proxy — clients (the api container) upload via
+    # HTTP to the server, which persists to the mounted /mlartifacts volume.
+    # This removes the need to share the artifact volume across containers
+    # and fixes the PermissionError the api hit writing as non-root.
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlartifacts
+      --default-artifact-root mlflow-artifacts:/
+      --serve-artifacts
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: ghcr.io/${GITHUB_REPOSITORY:-local/student-dropout-mlops}/api:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      mlflow:
+        condition: service_started
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      API_KEY: ${API_KEY:?API_KEY is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRY_MINUTES: ${JWT_EXPIRY_MINUTES:-60}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      MLFLOW_TRACKING_URI: ${MLFLOW_TRACKING_URI:-http://mlflow:5000}
+      MLFLOW_EXPERIMENT_NAME: ${MLFLOW_EXPERIMENT_NAME:-student-dropout}
+      MLFLOW_REGISTERED_MODEL_NAME: ${MLFLOW_REGISTERED_MODEL_NAME:-student-dropout-classifier}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-http://localhost:4200}
+      MODEL_PATH: /app/models/champion/model.joblib
+      METADATA_PATH: /app/models/champion/metadata.json
+      REFERENCE_DATA_PATH: /app/data/reference/reference.parquet
+      DRIFT_REPORT_DIR: /app/reports/drift
+      # Silence GitPython's warning about the missing git binary — MLflow
+      # only uses git to stamp a source SHA, which we do not rely on in
+      # containerised runs (we log the champion_run_id explicitly).
+      GIT_PYTHON_REFRESH: quiet
+    volumes:
+      # Mount trained model + reference data so retrains persist across restarts
+      - ./models:/app/models
+      - ./data/reference:/app/data/reference
+      - ./reports:/app/reports
+      - ./data/processed:/app/data/processed:ro
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/api/v1/monitoring/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    restart: unless-stopped
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infrastructure/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+
+  # ---------------------------------------------------------------
+  # One-shot trainer: runs the full DVC pipeline
+  #   download → validate → preprocess → train → evaluate
+  # and writes artefacts into the shared ./models, ./data, ./reports
+  # volumes so the api service picks them up on its next start.
+  #
+  # Invoke with:   docker compose --profile train run --rm trainer
+  # Use --profile so the service does NOT auto-start with `up`.
+  # ---------------------------------------------------------------
+  trainer:
+    profiles: ["train"]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: ghcr.io/${GITHUB_REPOSITORY:-local/student-dropout-mlops}/api:${IMAGE_TAG:-latest}
+    environment:
+      # File-based MLflow tracking by default: writes into the ./mlruns bind
+      # mount so runs persist to the host and require no network hop. Override
+      # with TRAINER_MLFLOW_URI=http://mlflow:5000 in .env to log to the server.
+      MLFLOW_TRACKING_URI: ${TRAINER_MLFLOW_URI:-file:/app/mlruns}
+      MLFLOW_EXPERIMENT_NAME: ${MLFLOW_EXPERIMENT_NAME:-student-dropout}
+      MLFLOW_REGISTERED_MODEL_NAME: ${MLFLOW_REGISTERED_MODEL_NAME:-student-dropout-classifier}
+      PYTHONPATH: /app
+    user: "0:0"                          # needs write on bind-mounted dirs
+    working_dir: /app
+    volumes:
+      - ./dvc.yaml:/app/dvc.yaml:ro
+      - ./params.yaml:/app/params.yaml:ro
+      - ./backend:/app/backend:ro
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./reports:/app/reports
+      - ./mlruns:/app/mlruns
+      - dvc-cache:/dvc-cache
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        export PATH="/opt/venv/bin:$PATH"
+        if [ ! -f /app/.dvc/config ]; then
+          echo "[trainer] initialising DVC (no-scm mode)…"
+          dvc init --no-scm -f
+          dvc cache dir /dvc-cache
+        fi
+        echo "[trainer] dvc repro — this takes 5-15 min on first run."
+        dvc repro
+        echo "[trainer] done. Restart the api service to load the new champion."
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: ghcr.io/${GITHUB_REPOSITORY:-local/student-dropout-mlops}/frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "4200:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
+  mlflow-artifacts:
+  mlflow-db:
+  prometheus-data:
+  grafana-data:
+  dvc-cache:

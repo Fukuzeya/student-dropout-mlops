@@ -1,0 +1,131 @@
+# =====================================================================
+# Hyperparameters and split configuration for the DVC pipeline.
+# Tracked in git so every `dvc repro` is bit-for-bit reproducible.
+# =====================================================================
+
+seed: 42
+
+split:
+  test_size: 0.20
+  val_size: 0.10            # held out from train for early stopping
+  stratify_on: target
+
+cv:
+  n_splits: 5
+  shuffle: true
+
+target:
+  column: Target
+  classes: [Dropout, Enrolled, Graduate]
+
+models:
+  logreg:
+    C: 1.0
+    max_iter: 2000
+    class_weight: balanced
+    solver: lbfgs
+
+  random_forest:
+    n_estimators: 400
+    max_depth: 12
+    min_samples_leaf: 2
+    class_weight: balanced_subsample
+    n_jobs: -1
+
+  xgboost:
+    n_estimators: 600
+    max_depth: 6
+    learning_rate: 0.05
+    subsample: 0.85
+    colsample_bytree: 0.85
+    reg_lambda: 1.0
+    objective: multi:softprob
+    eval_metric: mlogloss
+    tree_method: hist
+
+  lightgbm:
+    n_estimators: 600
+    max_depth: -1
+    num_leaves: 63
+    learning_rate: 0.05
+    subsample: 0.85
+    colsample_bytree: 0.85
+    reg_lambda: 1.0
+    class_weight: balanced
+    objective: multiclass
+
+  mlp:
+    hidden_dims: [128, 64]
+    dropout: 0.2
+    lr: 0.001
+    weight_decay: 0.0001
+    batch_size: 64
+    max_epochs: 60
+    patience: 8
+
+evaluation:
+  primary_metric: macro_f1
+  secondary_metric: dropout_recall
+  promotion:
+    min_macro_f1_gain: 0.01      # +1pp absolute over current production
+    max_per_class_regression: 0.02   # no class may drop more than 2pp
+  bootstrap:
+    n_resamples: 1000
+    confidence: 0.95
+  calibration:
+    n_bins: 15
+    fit_temperature: true
+  threshold:
+    target_class: Dropout
+    target_recall: 0.85
+    alpha: 0.6
+    beta: 0.4
+  cost_matrix:
+    Dropout:  {Dropout: 0.0, Enrolled: 5.0, Graduate: 10.0}
+    Enrolled: {Dropout: 1.5, Enrolled: 0.0, Graduate: 2.5}
+    Graduate: {Dropout: 1.0, Enrolled: 0.5, Graduate: 0.0}
+  fairness:
+    min_group_size: 25
+
+ablation:
+  feature_groups:
+    academic:
+      - Curricular units 1st sem (credited)
+      - Curricular units 1st sem (enrolled)
+      - Curricular units 1st sem (evaluations)
+      - Curricular units 1st sem (approved)
+      - Curricular units 1st sem (grade)
+      - Curricular units 1st sem (without evaluations)
+      - Curricular units 2nd sem (credited)
+      - Curricular units 2nd sem (enrolled)
+      - Curricular units 2nd sem (evaluations)
+      - Curricular units 2nd sem (approved)
+      - Curricular units 2nd sem (grade)
+      - Curricular units 2nd sem (without evaluations)
+      - Previous qualification (grade)
+      - Admission grade
+    demographic:
+      - Marital status
+      - Nationality
+      - Gender
+      - Age at enrollment
+      - International
+      - Mothers qualification
+      - Fathers qualification
+      - Mothers occupation
+      - Fathers occupation
+    macroeconomic:
+      - Unemployment rate
+      - Inflation rate
+      - GDP
+    financial_aid:
+      - Debtor
+      - Tuition fees up to date
+      - Scholarship holder
+      - Displaced
+      - Educational special needs
+      - Application mode
+      - Application order
+      - Daytime/evening attendance
+      - Course
+      - Previous qualification

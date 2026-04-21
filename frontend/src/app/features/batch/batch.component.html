@@ -1,0 +1,165 @@
+<section class="space-y-6">
+  <header class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+    <div>
+      <p class="text-2xs uppercase tracking-wider text-brand-300">Batch operations</p>
+      <h1 class="text-2xl lg:text-3xl font-semibold tracking-tight text-white">Batch Predict</h1>
+      <p class="text-sm text-surface-400 mt-1">
+        Upload a CSV of student records and run them through the production model. Results are validated against the
+        Pandera contract before scoring.
+      </p>
+    </div>
+    @if (result()) {
+      <button type="button" class="btn-secondary" (click)="downloadCsv()">⤓ Download results</button>
+    }
+  </header>
+
+  <!-- Upload zone -->
+  <div
+    class="surface-card p-6 transition-all"
+    [class.ring-2]="dragOver()"
+    [class.ring-brand-500]="dragOver()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+  >
+    <div class="flex flex-col items-center text-center py-8 gap-3">
+      <div class="h-14 w-14 rounded-full bg-brand-600/15 ring-1 ring-brand-500/40 flex items-center justify-center text-brand-300 text-2xl">
+        ⇪
+      </div>
+      <div>
+        <p class="text-base font-semibold text-white">
+          Drag &amp; drop a CSV file
+        </p>
+        <p class="text-xs text-surface-400 mt-1">or browse from your machine · max 10 MB</p>
+      </div>
+      <label class="btn-primary cursor-pointer">
+        <input type="file" accept=".csv,text/csv" class="hidden" (change)="onPick($event)" />
+        Browse file
+      </label>
+
+      @if (file()) {
+        <div class="mt-4 surface-card px-4 py-3 flex items-center gap-3 max-w-md w-full">
+          <span class="h-9 w-9 rounded-md bg-surface-800 flex items-center justify-center text-surface-300 text-sm">📄</span>
+          <div class="flex-1 min-w-0 text-left">
+            <p class="text-sm font-medium text-white truncate">{{ file()!.name }}</p>
+            <p class="text-2xs text-surface-400">{{ (file()!.size / 1024) | number: '1.0-1' }} KB</p>
+          </div>
+          <button type="button" class="btn-ghost text-xs" (click)="reset()">Remove</button>
+        </div>
+
+        <div class="flex gap-2 mt-2">
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isUploading()"
+            (click)="submit()"
+          >
+            @if (isUploading()) {
+              <span class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+              Scoring…
+            } @else {
+              Score batch
+            }
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  @if (isUploading()) {
+    <div class="surface-card p-5 space-y-3">
+      <app-skeleton width="40%" height="0.875rem" />
+      @for (_ of [1, 2, 3, 4]; track $index) {
+        <app-skeleton height="2rem" />
+      }
+    </div>
+  }
+
+  <!-- Results -->
+  @if (result()) {
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div class="surface-card p-4">
+        <p class="text-2xs uppercase tracking-wider text-surface-400">Total rows</p>
+        <p class="text-2xl font-semibold text-white tabular-nums mt-1">{{ result()!.total_rows | number }}</p>
+      </div>
+      <div class="surface-card p-4">
+        <p class="text-2xs uppercase tracking-wider text-surface-400">Scored</p>
+        <p class="text-2xl font-semibold text-status-graduate tabular-nums mt-1">{{ result()!.scored_rows | number }}</p>
+      </div>
+      <div class="surface-card p-4">
+        <p class="text-2xs uppercase tracking-wider text-surface-400">Failed</p>
+        <p class="text-2xl font-semibold text-status-dropout tabular-nums mt-1">{{ result()!.failed_rows | number }}</p>
+      </div>
+      <div class="surface-card p-4">
+        <p class="text-2xs uppercase tracking-wider text-surface-400">Model</p>
+        <p class="text-lg font-mono text-brand-300 mt-1 truncate">{{ result()!.model_version }}</p>
+      </div>
+    </div>
+
+    @if (summary()) {
+      <div class="surface-card p-4">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs text-surface-400 mr-2">Filter:</span>
+          @for (lvl of riskFilters; track lvl) {
+            <button
+              type="button"
+              class="badge-neutral hover:bg-surface-700 transition-colors"
+              [class.ring-brand-500]="riskFilter() === lvl"
+              [class.text-white]="riskFilter() === lvl"
+              (click)="setFilter(lvl)"
+            >
+              {{ lvl }}
+              @if (lvl !== 'All') {
+                <span class="ml-1.5 text-2xs text-surface-400 tabular-nums">{{ summary()![lvl] }}</span>
+              }
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    @if (filteredRows().length === 0) {
+      <app-empty-state icon="∅" title="No predictions match this filter" />
+    } @else {
+      <div class="surface-card overflow-hidden">
+        <div class="overflow-x-auto max-h-[60vh]">
+          <table class="min-w-full text-sm">
+            <thead class="bg-surface-850 sticky top-0 z-10 text-2xs uppercase tracking-wider text-surface-400">
+              <tr>
+                <th class="text-left py-3 px-4 font-medium">#</th>
+                <th class="text-left py-3 px-4 font-medium">Student ID</th>
+                <th class="text-left py-3 px-4 font-medium">Status</th>
+                <th class="text-left py-3 px-4 font-medium">Risk</th>
+                <th class="text-left py-3 px-4 font-medium w-[260px]">Confidence</th>
+                <th class="text-right py-3 px-4 font-medium">Dropout p</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-surface-800/80">
+              @for (row of filteredRows(); track trackRow($index, row)) {
+                <tr class="hover:bg-surface-850/60">
+                  <td class="py-2 px-4 text-surface-500 tabular-nums">{{ row.row_index }}</td>
+                  <td class="py-2 px-4 font-mono text-xs text-surface-200">{{ row.student_id ?? '—' }}</td>
+                  <td class="py-2 px-4"><app-status-badge [status]="row.predicted_class" /></td>
+                  <td class="py-2 px-4"><app-risk-badge [level]="row.risk_level" /></td>
+                  <td class="py-2 px-4">
+                    <app-confidence-bar [probabilities]="row.probabilities" [showLegend]="false" />
+                  </td>
+                  <td class="py-2 px-4 text-right tabular-nums font-semibold text-status-dropout">
+                    {{ (row.probabilities.Dropout * 100) | number: '1.1-1' }}%
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  } @else if (!file() && !isUploading()) {
+    <app-empty-state
+      icon="⇪"
+      title="No batch results yet"
+      description="Drop a CSV above to score it. The file should match the UCI dropout schema columns."
+    />
+  }
+</section>

@@ -1,0 +1,160 @@
+# =============================================================================
+# Production overlay for AWS EC2.
+#
+# Usage on the EC2 host (done automatically by scripts/deploy_aws.sh):
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Differences vs docker-compose.yml:
+#   * Every service uses a pinned GHCR image — no `build:` blocks, so the
+#     server never needs the source tree.
+#   * State lives on named Docker volumes (mlflow-db, mlflow-artifacts,
+#     prometheus-data, grafana-data) that survive container recreation.
+#   * ./models, ./data/reference, ./reports are bind-mounted so the
+#     host-side `dvc repro` (or `docker compose run trainer`) updates
+#     what the api container serves without a rebuild.
+#   * Postgres is intentionally omitted — MLflow runs on SQLite.
+# =============================================================================
+
+services:
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.16.2
+    restart: unless-stopped
+    environment:
+      MLFLOW_BACKEND_STORE_URI: sqlite:////mlflow/mlflow.db
+    volumes:
+      - mlflow-db:/mlflow
+      - mlflow-artifacts:/mlartifacts
+    ports:
+      - "5000:5000"
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlartifacts
+      --default-artifact-root mlflow-artifacts:/
+      --serve-artifacts
+
+  api:
+    image: ghcr.io/${GHCR_REPOSITORY}/api:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      mlflow:
+        condition: service_started
+    environment:
+      APP_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      API_KEY: ${API_KEY:?API_KEY is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRY_MINUTES: ${JWT_EXPIRY_MINUTES:-60}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_EXPERIMENT_NAME: ${MLFLOW_EXPERIMENT_NAME:-student-dropout}
+      MLFLOW_REGISTERED_MODEL_NAME: ${MLFLOW_REGISTERED_MODEL_NAME:-student-dropout-classifier}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:?CORS_ALLOW_ORIGINS must be set for production}
+      MODEL_PATH: /app/models/champion/model.joblib
+      METADATA_PATH: /app/models/champion/metadata.json
+      REFERENCE_DATA_PATH: /app/data/reference/reference.parquet
+      DRIFT_REPORT_DIR: /app/reports/drift
+      GIT_PYTHON_REFRESH: quiet
+    volumes:
+      - ./models:/app/models
+      - ./data/reference:/app/data/reference
+      - ./reports:/app/reports
+      - ./data/processed:/app/data/processed:ro
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/api/v1/monitoring/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    image: ghcr.io/${GHCR_REPOSITORY}/frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "4200:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    restart: unless-stopped
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=30d
+      - --web.enable-lifecycle
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infrastructure/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+
+  # One-shot trainer: triggered manually on the EC2 host after drift or
+  # on the first deploy to produce data/reference + models/champion.
+  #   docker compose -f docker-compose.prod.yml --profile train run --rm trainer
+  trainer:
+    profiles: ["train"]
+    image: ghcr.io/${GHCR_REPOSITORY}/api:${IMAGE_TAG:-latest}
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_EXPERIMENT_NAME: ${MLFLOW_EXPERIMENT_NAME:-student-dropout}
+      MLFLOW_REGISTERED_MODEL_NAME: ${MLFLOW_REGISTERED_MODEL_NAME:-student-dropout-classifier}
+      PYTHONPATH: /app
+    user: "0:0"
+    working_dir: /app
+    volumes:
+      - ./dvc.yaml:/app/dvc.yaml:ro
+      - ./params.yaml:/app/params.yaml:ro
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./reports:/app/reports
+      - ./mlruns:/app/mlruns
+      - dvc-cache:/dvc-cache
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        export PATH="/opt/venv/bin:$PATH"
+        if [ ! -f /app/.dvc/config ]; then
+          echo "[trainer] initialising DVC (no-scm mode)…"
+          dvc init --no-scm -f
+          dvc cache dir /dvc-cache
+        fi
+        echo "[trainer] dvc repro — this takes 5-15 min on first run."
+        dvc repro
+        echo "[trainer] done. Restart the api service to load the new champion."
+
+volumes:
+  mlflow-artifacts:
+  mlflow-db:
+  prometheus-data:
+  grafana-data:
+  dvc-cache:

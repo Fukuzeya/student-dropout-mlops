@@ -1,0 +1,14 @@
+node_modules
+dist
+.angular
+out-tsc
+coverage
+.DS_Store
+*.log
+.env
+.env.*
+.idea
+.vscode
+.git
+.gitignore
+README.md

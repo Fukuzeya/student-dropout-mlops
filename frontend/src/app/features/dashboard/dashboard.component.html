@@ -1,0 +1,183 @@
+<section class="space-y-6">
+  <header class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+    <div>
+      <p class="text-2xs uppercase tracking-wider text-brand-300">Risk intelligence</p>
+      <h1 class="text-2xl lg:text-3xl font-semibold tracking-tight text-white">
+        Cohort Dropout Outlook
+      </h1>
+      <p class="text-sm text-surface-400 mt-1">
+        Live champion model · macro-F1
+        <span class="font-mono text-brand-300">
+          @if (kpis()) {
+            {{ (kpis()!.model_macro_f1 * 100) | number: '1.1-1' }}%
+          } @else {
+            —
+          }
+        </span>
+        · last drift check
+        <span class="font-mono text-surface-200">{{ fmtAgo(kpis()?.last_drift_check) }}</span>
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" class="btn-secondary" (click)="manualRefresh()">
+        <span aria-hidden="true">↻</span>
+        Refresh
+      </button>
+      <a routerLink="/batch" class="btn-primary">Batch predict</a>
+    </div>
+  </header>
+
+  <!-- KPI grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    @if (loadingKpis()) {
+      @for (_ of [1, 2, 3, 4]; track $index) {
+        <div class="surface-card p-5">
+          <app-skeleton width="60%" height="0.75rem" />
+          <div class="mt-3"><app-skeleton width="40%" height="1.875rem" /></div>
+          <div class="mt-3"><app-skeleton width="80%" height="0.75rem" /></div>
+        </div>
+      }
+    } @else {
+      <app-kpi-card
+        label="Total students scored"
+        [value]="fmtNum(kpis()?.total_students ?? 0)"
+        subtitle="Active cohort across faculties"
+        icon="◉"
+        tone="brand"
+      />
+      <app-kpi-card
+        label="High-risk students"
+        [value]="fmtNum(kpis()?.high_risk_count ?? 0)"
+        [subtitle]="fmtPct((kpis()?.high_risk_pct ?? 0) / 100, 1) + ' of cohort'"
+        icon="!"
+        tone="negative"
+        trend="up"
+        [delta]="fmtPct((kpis()?.high_risk_pct ?? 0) / 100, 1)"
+      />
+      <app-kpi-card
+        label="Active interventions"
+        [value]="fmtNum(kpis()?.active_interventions ?? 0)"
+        subtitle="Open referrals & coaching plans"
+        icon="✚"
+        tone="warning"
+      />
+      <app-kpi-card
+        label="Predictions today"
+        [value]="fmtNum(kpis()?.predictions_today ?? 0)"
+        [subtitle]="'Model ' + (kpis()?.model_version ?? '—')"
+        icon="↗"
+        tone="positive"
+      />
+    }
+  </div>
+
+  <!-- Distribution + recent at-risk -->
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+    <article class="surface-card p-5 xl:col-span-1">
+      <header class="flex items-center justify-between">
+        <div>
+          <h2 class="section-title">Risk distribution</h2>
+          <p class="section-subtitle">Champion classification across the cohort</p>
+        </div>
+      </header>
+
+      @if (loadingCohort()) {
+        <div class="mt-6 space-y-4">
+          <app-skeleton height="2rem" />
+          <app-skeleton height="0.875rem" width="80%" />
+          <app-skeleton height="0.875rem" width="60%" />
+        </div>
+      } @else {
+        <div class="mt-5">
+          <div class="flex h-3 w-full overflow-hidden rounded-full ring-1 ring-surface-700 bg-surface-800">
+            <div class="bg-status-dropout transition-all" [style.width.%]="distribution().High.pct"></div>
+            <div class="bg-status-enrolled transition-all" [style.width.%]="distribution().Medium.pct"></div>
+            <div class="bg-status-graduate transition-all" [style.width.%]="distribution().Low.pct"></div>
+          </div>
+          <ul class="mt-4 space-y-2.5">
+            @for (level of riskLabels; track level) {
+              <li class="flex items-center gap-3">
+                <app-risk-badge [level]="level" [showLabel]="false" />
+                <div class="flex-1 text-xs text-surface-300">
+                  <div class="flex justify-between">
+                    <span>{{ level }} risk</span>
+                    <span class="tabular-nums text-surface-100 font-medium">
+                      {{ fmtNum(distribution()[level].count) }}
+                      <span class="text-surface-500"> · {{ distribution()[level].pct | number: '1.1-1' }}%</span>
+                    </span>
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </article>
+
+    <article class="surface-card p-5 xl:col-span-2">
+      <header class="flex items-center justify-between">
+        <div>
+          <h2 class="section-title">At-risk watchlist</h2>
+          <p class="section-subtitle">Top students ranked by Dropout probability</p>
+        </div>
+        <a routerLink="/students" class="btn-ghost text-xs">View all →</a>
+      </header>
+
+      @if (loadingCohort()) {
+        <div class="mt-5 space-y-3">
+          @for (_ of [1, 2, 3, 4, 5]; track $index) {
+            <app-skeleton height="3rem" />
+          }
+        </div>
+      } @else if (atRiskTop().length === 0) {
+        <div class="mt-5">
+          <app-empty-state
+            icon="◎"
+            title="No high or medium risk students"
+            description="The cohort is currently in a low-risk band. Check back after the next batch scoring run."
+          />
+        </div>
+      } @else {
+        <div class="mt-4 overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead class="text-2xs uppercase tracking-wider text-surface-400">
+              <tr class="border-b border-surface-800">
+                <th class="text-left py-2 pr-4 font-medium">Student</th>
+                <th class="text-left py-2 pr-4 font-medium">Programme</th>
+                <th class="text-left py-2 pr-4 font-medium">Risk</th>
+                <th class="text-left py-2 pr-4 font-medium w-[260px]">Confidence</th>
+                <th class="text-right py-2 pl-4 font-medium">Dropout p</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-surface-800/80">
+              @for (row of atRiskTop(); track trackById($index, row)) {
+                <tr class="hover:bg-surface-850/60 transition-colors">
+                  <td class="py-3 pr-4">
+                    <a
+                      [routerLink]="['/students']"
+                      [queryParams]="{ id: row.student.student_id }"
+                      class="font-medium text-white hover:text-brand-300"
+                    >
+                      {{ row.student.display_name ?? row.student.student_id }}
+                    </a>
+                    <p class="text-2xs text-surface-500 font-mono">{{ row.student.student_id }}</p>
+                  </td>
+                  <td class="py-3 pr-4 text-surface-300">{{ row.student.programme ?? '—' }}</td>
+                  <td class="py-3 pr-4">
+                    <app-risk-badge [level]="row.prediction.risk_level" />
+                  </td>
+                  <td class="py-3 pr-4">
+                    <app-confidence-bar [probabilities]="row.prediction.probabilities" [showLegend]="false" />
+                  </td>
+                  <td class="py-3 pl-4 text-right tabular-nums font-semibold text-status-dropout">
+                    {{ (row.prediction.probabilities.Dropout * 100) | number: '1.1-1' }}%
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </article>
+  </div>
+</section>

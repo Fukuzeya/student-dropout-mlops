@@ -1,0 +1,22 @@
+# =============================================================================
+# Copy to terraform.tfvars and fill in your values. NEVER commit the filled
+# version — the .gitignore at the repo root excludes every *.tfvars except
+# this example.
+# =============================================================================
+
+aws_region   = "us-east-1"
+project_name = "uz-dropout"
+
+# Paste the PUBLIC half of the key you'll use for SSH:
+#   ssh-keygen -t ed25519 -C "uz-dropout-deploy" -f ~/.ssh/uz-dropout-key
+#   cat ~/.ssh/uz-dropout-key.pub
+ssh_public_key = "ssh-ed25519 AAAA... comment"
+
+instance_type       = "t3.xlarge"
+root_volume_size_gb = 30
+
+# Tighten to your office IP/32 before running this against anything
+# holding real student data.
+allowed_cidr_blocks = ["0.0.0.0/0"]
+
+mlflow_artifact_bucket_suffix = "mlflow-artifacts"

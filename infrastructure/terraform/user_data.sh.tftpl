@@ -1,0 +1,35 @@
+#!/bin/bash
+# =============================================================================
+# EC2 cloud-init bootstrap.
+# Runs once on first boot. Idempotent: re-running after ignore_changes(ami)
+# is harmless because every step checks state before acting.
+# =============================================================================
+set -euxo pipefail
+
+PROJECT_NAME="${project_name}"
+DEPLOY_DIR="/opt/$${PROJECT_NAME}"
+
+# ---- System packages --------------------------------------------------------
+dnf -y update
+dnf -y install docker git jq awscli
+
+# ---- Docker -----------------------------------------------------------------
+systemctl enable --now docker
+usermod -aG docker ec2-user
+
+# Compose v2 as a Docker CLI plugin (Amazon Linux 2023 does not ship it).
+DOCKER_CONFIG=/usr/local/lib/docker
+mkdir -p "$${DOCKER_CONFIG}/cli-plugins"
+curl -fSL "https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-x86_64" \
+    -o "$${DOCKER_CONFIG}/cli-plugins/docker-compose"
+chmod +x "$${DOCKER_CONFIG}/cli-plugins/docker-compose"
+
+# ---- Deploy directory -------------------------------------------------------
+mkdir -p "$${DEPLOY_DIR}"
+chown ec2-user:ec2-user "$${DEPLOY_DIR}"
+
+# The GitHub Actions deploy workflow rsyncs docker-compose.prod.yml,
+# infrastructure/, and the .env file into $${DEPLOY_DIR} and then runs
+# `docker compose pull && docker compose up -d`.
+
+echo "bootstrap-complete" > /var/log/uz-dropout-bootstrap.log

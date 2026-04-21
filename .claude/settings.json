@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(python -m pytest backend/tests/test_rigor.py -x -q)",
+      "Bash(python -m pip install -q \"pytest>=8.0\")",
+      "Bash(python -m pip install -q \"pytest<9,>=8\")",
+      "Bash(python -c \"import pandas; print\\('pandas', pandas.__version__\\)\")",
+      "Bash(python -m pip install -q \"pandas>=2.1.1\")",
+      "Bash(python -m pip install -q \"pandas<3,>=2.1.1\")",
+      "Bash(python -m pip install -q pytest-asyncio pytest-cov)",
+      "Bash(python -m pytest backend/tests/test_rigor.py -x -q --no-cov)",
+      "Bash(python -m pytest backend/tests/test_evaluate_and_registry.py backend/tests/test_schemas.py -q --no-cov)",
+      "Bash(python -m pytest backend/tests/test_evaluate_and_registry.py backend/tests/test_rigor.py -q --no-cov)",
+      "Bash(python -m pytest backend/tests/test_api_drift_retrain.py -x --no-header -q)",
+      "Bash(pip install *)",
+      "Bash(python -m pytest backend/tests/test_api_drift_retrain.py -x --no-header -q --no-cov)",
+      "Bash(python -m pytest backend/tests/test_api_drift_retrain.py --no-header -q --no-cov)",
+      "Bash(python -m pytest backend/tests/ --no-header -q --no-cov)",
+      "Bash(python -m pytest backend/tests/ --no-header -q --no-cov --ignore=backend/tests/test_api_predict.py --ignore=backend/tests/test_models.py)",
+      "Bash(npm install *)",
+      "Bash(docker compose *)",
+      "Bash(python -c \"from backend.app.main import create_app; app = create_app\\(\\); print\\('OK'\\); print\\(sorted\\(r.path for r in app.routes if hasattr\\(r, 'path'\\)\\)\\)\")",
+      "Bash(python -m pytest backend/tests/test_recommender.py backend/tests/test_api_predict.py -x --tb=short)",
+      "Bash(python -m pytest backend/tests/test_recommender.py --no-cov -q)",
+      "Bash(python -m pytest backend/tests/test_schemas.py backend/tests/test_drift.py backend/tests/test_recommender.py backend/tests/test_api_auth.py --no-cov -q)",
+      "Bash(python -m pytest backend/tests/test_schemas.py::test_feature_columns_count --no-cov -q)",
+      "Bash(MSYS_NO_PATHCONV=1 docker compose exec api ls /app/reports/figures)",
+      "Bash(MSYS_NO_PATHCONV=1 docker compose exec api pwd)",
+      "Bash(MSYS_NO_PATHCONV=1 docker compose exec api curl -sS -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:8000/api/v1/monitoring/evaluation/figures/calibration_pre.png)",
+      "Bash(MSYS_NO_PATHCONV=1 docker compose exec api /opt/venv/bin/python -m backend.app.ml.train run --train data/processed/train.parquet --val data/processed/val.parquet --models-out /tmp/staging)",
+      "Bash(MSYS_NO_PATHCONV=1 docker compose exec -T api /opt/venv/bin/python /app/scripts/build_drift_sample.py)"
+    ]
+  }
+}

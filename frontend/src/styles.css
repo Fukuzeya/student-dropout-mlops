@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    @apply h-full bg-surface-900 text-surface-100 font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+  }
+  :root {
+    color-scheme: dark;
+  }
+  ::selection {
+    background: rgba(79, 70, 229, 0.35);
+    color: white;
+  }
+  /* Subtle scrollbars to match the bank-portal aesthetic */
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background: theme(colors.surface.700);
+    border-radius: 9999px;
+    border: 2px solid theme(colors.surface.900);
+  }
+  *::-webkit-scrollbar-thumb:hover { background: theme(colors.surface.600); }
+}
+
+@layer components {
+  /* ----- Card surface ----- */
+  .surface-card {
+    @apply bg-surface-850 border border-surface-700/60 rounded-xl shadow-card;
+  }
+  .surface-card-elevated {
+    @apply bg-surface-850 border border-surface-700/60 rounded-xl shadow-card-lg;
+  }
+
+  /* ----- Buttons ----- */
+  .btn {
+    @apply inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium
+           transition-colors duration-150 focus:outline-none focus-visible:ring-2
+           focus-visible:ring-brand-500/60 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary  { @apply btn bg-brand-600 hover:bg-brand-500 text-white shadow-card; }
+  .btn-secondary{ @apply btn bg-surface-800 hover:bg-surface-700 text-surface-100 border border-surface-700; }
+  .btn-ghost    { @apply btn text-surface-300 hover:text-white hover:bg-surface-800; }
+  .btn-danger   { @apply btn bg-rose-600 hover:bg-rose-500 text-white; }
+
+  /* ----- Inputs ----- */
+  .input {
+    @apply w-full bg-surface-900 border border-surface-700 rounded-lg px-3 py-2 text-sm
+           text-surface-100 placeholder:text-surface-400
+           focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30;
+  }
+  .label {
+    @apply block text-xs font-medium text-surface-300 uppercase tracking-wide mb-1.5;
+  }
+
+  /* ----- Status badges ----- */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ring-1;
+  }
+  .badge-graduate { @apply badge bg-status-graduate-bg text-status-graduate ring-status-graduate-ring; }
+  .badge-enrolled { @apply badge bg-status-enrolled-bg text-status-enrolled ring-status-enrolled-ring; }
+  .badge-dropout  { @apply badge bg-status-dropout-bg  text-status-dropout  ring-status-dropout-ring;  }
+  .badge-neutral  { @apply badge bg-surface-700/60 text-surface-200 ring-surface-600/40; }
+
+  /* ----- Skeleton shimmer ----- */
+  .skeleton {
+    @apply rounded-md bg-gradient-to-r from-surface-800 via-surface-700 to-surface-800
+           animate-shimmer;
+    background-size: 800px 100%;
+  }
+
+  /* ----- Section header ----- */
+  .section-title {
+    @apply text-lg font-semibold tracking-tight text-white;
+  }
+  .section-subtitle {
+    @apply text-xs text-surface-400 mt-0.5;
+  }
+
+  /* ----- Sidebar navigation item ----- */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-surface-300
+           hover:bg-surface-800 hover:text-white transition-colors;
+  }
+  .nav-item-active {
+    @apply nav-item bg-surface-800 text-white shadow-[inset_2px_0_0_theme(colors.brand.500)];
+  }
+}

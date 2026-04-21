@@ -1,0 +1,515 @@
+{
+  "model_name": "logreg",
+  "n_test": 885,
+  "classes": [
+    "Dropout",
+    "Enrolled",
+    "Graduate"
+  ],
+  "headline": {
+    "macro_f1": 0.6886943023655698,
+    "weighted_f1": 0.7389401687670205,
+    "dropout_recall": 0.6971830985915493,
+    "per_class": {
+      "Dropout": {
+        "precision": 0.7951807228915663,
+        "recall": 0.6971830985915493,
+        "f1": 0.7429643527204502,
+        "support": 284
+      },
+      "Enrolled": {
+        "precision": 0.4194915254237288,
+        "recall": 0.6226415094339622,
+        "f1": 0.5012658227848101,
+        "support": 159
+      },
+      "Graduate": {
+        "precision": 0.865,
+        "recall": 0.7828054298642534,
+        "f1": 0.8218527315914489,
+        "support": 442
+      }
+    },
+    "confusion_matrix": [
+      [
+        198,
+        61,
+        25
+      ],
+      [
+        31,
+        99,
+        29
+      ],
+      [
+        20,
+        76,
+        346
+      ]
+    ],
+    "macro_auc_ovr": 0.8756454202702058,
+    "bootstrap": {
+      "macro_f1": {
+        "metric": "macro_f1",
+        "point": 0.6886943023655698,
+        "lower": 0.655220072388539,
+        "upper": 0.7194052372102767,
+        "n_resamples": 1000,
+        "confidence": 0.95
+      },
+      "weighted_f1": {
+        "metric": "weighted_f1",
+        "point": 0.7389401687670205,
+        "lower": 0.7075680613561004,
+        "upper": 0.7686687908309183,
+        "n_resamples": 1000,
+        "confidence": 0.95
+      },
+      "dropout_recall": {
+        "metric": "dropout_recall",
+        "point": 0.6971830985915493,
+        "lower": 0.6392075163398693,
+        "upper": 0.7516598588485521,
+        "n_resamples": 1000,
+        "confidence": 0.95
+      }
+    }
+  },
+  "calibration": {
+    "pre": {
+      "classes": [
+        "Dropout",
+        "Enrolled",
+        "Graduate"
+      ],
+      "brier_per_class": {
+        "Dropout": 0.10276683796554374,
+        "Enrolled": 0.14198525133569007,
+        "Graduate": 0.12902977879790642
+      },
+      "brier_macro": 0.12459395603304675,
+      "ece_per_class": {
+        "Dropout": 0.031173834929566047,
+        "Enrolled": 0.11478100301190883,
+        "Graduate": 0.10312172902152601
+      },
+      "ece_macro": 0.0830255223210003,
+      "n_bins": 15,
+      "n_samples": 885
+    },
+    "post": {
+      "classes": [
+        "Dropout",
+        "Enrolled",
+        "Graduate"
+      ],
+      "brier_per_class": {
+        "Dropout": 0.10159530430179696,
+        "Enrolled": 0.1404546972588901,
+        "Graduate": 0.13097144552019202
+      },
+      "brier_macro": 0.12434048236029303,
+      "ece_per_class": {
+        "Dropout": 0.02572091434867048,
+        "Enrolled": 0.12056339116072311,
+        "Graduate": 0.11309257449893585
+      },
+      "ece_macro": 0.08645896000277647,
+      "n_bins": 15,
+      "n_samples": 885
+    },
+    "temperature": 1.1859375000000005
+  },
+  "threshold": {
+    "chosen_threshold": 0.2,
+    "target_recall": 0.85,
+    "objective": 0.785746339179175,
+    "rationale": "Maximises \u03b1\u00b7macro_F1 + \u03b2\u00b7I(recall\u22650.85) at T=0.20 (macro_F1=0.643, recall=0.873).",
+    "sweep": [
+      {
+        "threshold": 0.1,
+        "macro_f1": 0.5563669058463944,
+        "dropout_precision": 0.5342741935483871,
+        "dropout_recall": 0.9330985915492958,
+        "dropout_f1": 0.6794871794871795,
+        "flagged_pct": 0.56045197740113
+      },
+      {
+        "threshold": 0.15,
+        "macro_f1": 0.6087022151633376,
+        "dropout_precision": 0.5903890160183066,
+        "dropout_recall": 0.9084507042253521,
+        "dropout_f1": 0.7156726768377254,
+        "flagged_pct": 0.4937853107344633
+      },
+      {
+        "threshold": 0.2,
+        "macro_f1": 0.642910565298625,
+        "dropout_precision": 0.6424870466321243,
+        "dropout_recall": 0.8732394366197183,
+        "dropout_f1": 0.7402985074626866,
+        "flagged_pct": 0.43615819209039547
+      },
+      {
+        "threshold": 0.25,
+        "macro_f1": 0.6710853934374631,
+        "dropout_precision": 0.6846590909090909,
+        "dropout_recall": 0.8485915492957746,
+        "dropout_f1": 0.7578616352201258,
+        "flagged_pct": 0.3977401129943503
+      },
+      {
+        "threshold": 0.3,
+        "macro_f1": 0.6865911012470937,
+        "dropout_precision": 0.7253086419753086,
+        "dropout_recall": 0.8274647887323944,
+        "dropout_f1": 0.7730263157894737,
+        "flagged_pct": 0.36610169491525424
+      },
+      {
+        "threshold": 0.35,
+        "macro_f1": 0.6912843044634482,
+        "dropout_precision": 0.7525083612040134,
+        "dropout_recall": 0.7922535211267606,
+        "dropout_f1": 0.7718696397941681,
+        "flagged_pct": 0.33785310734463275
+      },
+      {
+        "threshold": 0.4,
+        "macro_f1": 0.6852210080298334,
+        "dropout_precision": 0.7615658362989324,
+        "dropout_recall": 0.7535211267605634,
+        "dropout_f1": 0.7575221238938054,
+        "flagged_pct": 0.31751412429378534
+      },
+      {
+        "threshold": 0.45,
+        "macro_f1": 0.6912998617525269,
+        "dropout_precision": 0.789272030651341,
+        "dropout_recall": 0.7253521126760564,
+        "dropout_f1": 0.7559633027522936,
+        "flagged_pct": 0.29491525423728815
+      },
+      {
+        "threshold": 0.5,
+        "macro_f1": 0.6886943023655698,
+        "dropout_precision": 0.7951807228915663,
+        "dropout_recall": 0.6971830985915493,
+        "dropout_f1": 0.7429643527204502,
+        "flagged_pct": 0.28135593220338984
+      },
+      {
+        "threshold": 0.55,
+        "macro_f1": 0.6886943023655698,
+        "dropout_precision": 0.7951807228915663,
+        "dropout_recall": 0.6971830985915493,
+        "dropout_f1": 0.7429643527204502,
+        "flagged_pct": 0.28135593220338984
+      },
+      {
+        "threshold": 0.6,
+        "macro_f1": 0.6886943023655698,
+        "dropout_precision": 0.7951807228915663,
+        "dropout_recall": 0.6971830985915493,
+        "dropout_f1": 0.7429643527204502,
+        "flagged_pct": 0.28135593220338984
+      },
+      {
+        "threshold": 0.65,
+        "macro_f1": 0.6886943023655698,
+        "dropout_precision": 0.7951807228915663,
+        "dropout_recall": 0.6971830985915493,
+        "dropout_f1": 0.7429643527204502,
+        "flagged_pct": 0.28135593220338984
+      },
+      {
+        "threshold": 0.7,
+        "macro_f1": 0.6886943023655698,
+        "dropout_precision": 0.7951807228915663,
+        "dropout_recall": 0.6971830985915493,
+        "dropout_f1": 0.7429643527204502,
+        "flagged_pct": 0.28135593220338984
+      },
+      {
+        "threshold": 0.75,
+        "macro_f1": 0.6886943023655698,
+        "dropout_precision": 0.7951807228915663,
+        "dropout_recall": 0.6971830985915493,
+        "dropout_f1": 0.7429643527204502,
+        "flagged_pct": 0.28135593220338984
+      },
+      {
+        "threshold": 0.8,
+        "macro_f1": 0.6886943023655698,
+        "dropout_precision": 0.7951807228915663,
+        "dropout_recall": 0.6971830985915493,
+        "dropout_f1": 0.7429643527204502,
+        "flagged_pct": 0.28135593220338984
+      },
+      {
+        "threshold": 0.85,
+        "macro_f1": 0.6886943023655698,
+        "dropout_precision": 0.7951807228915663,
+        "dropout_recall": 0.6971830985915493,
+        "dropout_f1": 0.7429643527204502,
+        "flagged_pct": 0.28135593220338984
+      },
+      {
+        "threshold": 0.9,
+        "macro_f1": 0.6886943023655698,
+        "dropout_precision": 0.7951807228915663,
+        "dropout_recall": 0.6971830985915493,
+        "dropout_f1": 0.7429643527204502,
+        "flagged_pct": 0.28135593220338984
+      }
+    ]
+  },
+  "tuned_metrics": {
+    "macro_f1": 0.642910565298625,
+    "weighted_f1": 0.7103560593669372,
+    "dropout_recall": 0.8732394366197183,
+    "per_class": {
+      "Dropout": {
+        "precision": 0.6424870466321243,
+        "recall": 0.8732394366197183,
+        "f1": 0.7402985074626866,
+        "support": 284
+      },
+      "Enrolled": {
+        "precision": 0.4251968503937008,
+        "recall": 0.33962264150943394,
+        "f1": 0.3776223776223776,
+        "support": 159
+      },
+      "Graduate": {
+        "precision": 0.8870967741935484,
+        "recall": 0.746606334841629,
+        "f1": 0.8108108108108109,
+        "support": 442
+      }
+    },
+    "confusion_matrix": [
+      [
+        248,
+        16,
+        20
+      ],
+      [
+        83,
+        54,
+        22
+      ],
+      [
+        55,
+        57,
+        330
+      ]
+    ],
+    "macro_auc_ovr": 0.8759065193304361
+  },
+  "cost": {
+    "argmax": {
+      "classes": [
+        "Dropout",
+        "Enrolled",
+        "Graduate"
+      ],
+      "cost_matrix": {
+        "Dropout": {
+          "Dropout": 0.0,
+          "Enrolled": 5.0,
+          "Graduate": 10.0
+        },
+        "Enrolled": {
+          "Dropout": 1.5,
+          "Enrolled": 0.0,
+          "Graduate": 2.5
+        },
+        "Graduate": {
+          "Dropout": 1.0,
+          "Enrolled": 0.5,
+          "Graduate": 0.0
+        }
+      },
+      "total_cost": 732.0,
+      "cost_per_sample": 0.8271186440677966,
+      "expected_utility": -0.8271186440677966,
+      "n": 885
+    },
+    "tuned": {
+      "classes": [
+        "Dropout",
+        "Enrolled",
+        "Graduate"
+      ],
+      "cost_matrix": {
+        "Dropout": {
+          "Dropout": 0.0,
+          "Enrolled": 5.0,
+          "Graduate": 10.0
+        },
+        "Enrolled": {
+          "Dropout": 1.5,
+          "Enrolled": 0.0,
+          "Graduate": 2.5
+        },
+        "Graduate": {
+          "Dropout": 1.0,
+          "Enrolled": 0.5,
+          "Graduate": 0.0
+        }
+      },
+      "total_cost": 543.0,
+      "cost_per_sample": 0.6135593220338983,
+      "expected_utility": -0.6135593220338983,
+      "n": 885
+    }
+  },
+  "fairness": {
+    "attributes": [
+      {
+        "attribute": "Gender",
+        "groups": [
+          {
+            "group": "Female",
+            "support": 570,
+            "macro_f1": 0.6367565001508974,
+            "dropout_recall": 0.841726618705036,
+            "dropout_flag_rate": 0.35964912280701755,
+            "dropout_fpr": 0.20417633410672853
+          },
+          {
+            "group": "Male",
+            "support": 315,
+            "macro_f1": 0.6364952265706542,
+            "dropout_recall": 0.903448275862069,
+            "dropout_flag_rate": 0.5746031746031746,
+            "dropout_fpr": 0.29411764705882354
+          }
+        ],
+        "demographic_parity_gap": 0.214954051796157,
+        "equal_opportunity_gap": 0.06172165715703304,
+        "predictive_equality_gap": 0.08994131295209501
+      },
+      {
+        "attribute": "Age band",
+        "groups": [
+          {
+            "group": "22-29",
+            "support": 189,
+            "macro_f1": 0.6144765455110283,
+            "dropout_recall": 0.8554216867469879,
+            "dropout_flag_rate": 0.5396825396825397,
+            "dropout_fpr": 0.29245283018867924
+          },
+          {
+            "group": "30+",
+            "support": 139,
+            "macro_f1": 0.7068181818181819,
+            "dropout_recall": 0.9466666666666667,
+            "dropout_flag_rate": 0.6474820143884892,
+            "dropout_fpr": 0.296875
+          },
+          {
+            "group": "<22",
+            "support": 557,
+            "macro_f1": 0.6234245466090207,
+            "dropout_recall": 0.8412698412698413,
+            "dropout_flag_rate": 0.348294434470377,
+            "dropout_fpr": 0.20417633410672853
+          }
+        ],
+        "demographic_parity_gap": 0.2991875799181122,
+        "equal_opportunity_gap": 0.10539682539682538,
+        "predictive_equality_gap": 0.09269866589327147
+      },
+      {
+        "attribute": "Scholarship holder",
+        "groups": [
+          {
+            "group": "No scholarship",
+            "support": 680,
+            "macro_f1": 0.630816785743615,
+            "dropout_recall": 0.8830188679245283,
+            "dropout_flag_rate": 0.5147058823529411,
+            "dropout_fpr": 0.27951807228915665
+          },
+          {
+            "group": "Scholarship",
+            "support": 205,
+            "macro_f1": 0.5838383838383838,
+            "dropout_recall": 0.7368421052631579,
+            "dropout_flag_rate": 0.17560975609756097,
+            "dropout_fpr": 0.11827956989247312
+          }
+        ],
+        "demographic_parity_gap": 0.33909612625538016,
+        "equal_opportunity_gap": 0.14617676266137047,
+        "predictive_equality_gap": 0.16123850239668353
+      },
+      {
+        "attribute": "Debtor",
+        "groups": [
+          {
+            "group": "No debt",
+            "support": 771,
+            "macro_f1": 0.6330735522318047,
+            "dropout_recall": 0.8506787330316742,
+            "dropout_flag_rate": 0.39948119325551235,
+            "dropout_fpr": 0.21818181818181817
+          },
+          {
+            "group": "Debtor",
+            "support": 114,
+            "macro_f1": 0.6540583136327817,
+            "dropout_recall": 0.9523809523809523,
+            "dropout_flag_rate": 0.6842105263157895,
+            "dropout_fpr": 0.35294117647058826
+          }
+        ],
+        "demographic_parity_gap": 0.28472933306027715,
+        "equal_opportunity_gap": 0.10170221934927814,
+        "predictive_equality_gap": 0.1347593582887701
+      },
+      {
+        "attribute": "International",
+        "groups": [
+          {
+            "group": "Local",
+            "support": 861,
+            "macro_f1": 0.6420609841157346,
+            "dropout_recall": 0.8763636363636363,
+            "dropout_flag_rate": 0.437862950058072,
+            "dropout_fpr": 0.23208191126279865
+          },
+          {
+            "group": "International",
+            "support": 24,
+            "macro_f1": 0.6816195077064643,
+            "dropout_recall": 0.7777777777777778,
+            "dropout_flag_rate": 0.375,
+            "dropout_fpr": 0.13333333333333333
+          }
+        ],
+        "demographic_parity_gap": 0.0,
+        "equal_opportunity_gap": 0.0,
+        "predictive_equality_gap": 0.0
+      }
+    ],
+    "summary_max_gap": 0.14617676266137047,
+    "summary_attribute": "Scholarship holder",
+    "n": 885
+  },
+  "macro_f1": 0.6886943023655698,
+  "macro_f1_lower": 0.655220072388539,
+  "macro_f1_upper": 0.7194052372102767,
+  "dropout_recall_argmax": 0.6971830985915493,
+  "dropout_recall_tuned": 0.8732394366197183,
+  "chosen_threshold": 0.2,
+  "expected_utility_argmax": -0.8271186440677966,
+  "expected_utility_tuned": -0.6135593220338983,
+  "fairness_max_gap": 0.14617676266137047,
+  "calibration_ece": 0.0830255223210003,
+  "calibration_ece_post": 0.08645896000277647,
+  "temperature": 1.1859375000000005
+}

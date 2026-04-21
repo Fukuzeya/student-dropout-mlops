@@ -1,0 +1,96 @@
+# =====================================================================
+# DVC pipeline. `dvc repro` runs the full lineage:
+#   download -> validate -> preprocess -> train -> evaluate
+# Every stage's params and outputs are tracked, so the pipeline is
+# bit-for-bit reproducible across machines.
+# =====================================================================
+
+stages:
+
+  download:
+    cmd: python -m backend.app.ml.data_loader download --out data/raw/dropout.csv
+    deps:
+      - backend/app/ml/data_loader.py
+    outs:
+      - data/raw/dropout.csv
+
+  validate:
+    cmd: python -m backend.app.ml.data_loader validate --in data/raw/dropout.csv
+    deps:
+      - data/raw/dropout.csv
+      - backend/app/ml/schemas.py
+      - backend/app/ml/data_loader.py
+    outs:
+      - data/processed/validated.parquet
+
+  preprocess:
+    cmd: python -m backend.app.ml.train preprocess
+      --in data/processed/validated.parquet
+      --out-dir data/processed
+      --reference-out data/reference/reference.parquet
+    deps:
+      - data/processed/validated.parquet
+      - backend/app/ml/features.py
+      - backend/app/ml/train.py
+      - params.yaml
+    params:
+      - seed
+      - split
+    outs:
+      - data/processed/train.parquet
+      - data/processed/val.parquet
+      - data/processed/test.parquet
+      - data/reference/reference.parquet
+
+  train:
+    cmd: python -m backend.app.ml.train run
+      --train data/processed/train.parquet
+      --val data/processed/val.parquet
+      --models-out models/champion
+    deps:
+      - data/processed/train.parquet
+      - data/processed/val.parquet
+      - backend/app/ml/train.py
+      - backend/app/ml/evaluate.py
+      - backend/app/ml/explain.py
+      - backend/app/ml/registry.py
+      - backend/app/ml/models
+      - params.yaml
+    params:
+      - seed
+      - cv
+      - models
+      - target
+    outs:
+      - models/champion/model.joblib
+      - models/champion/metadata.json
+
+  evaluate:
+    cmd: python -m backend.app.ml.evaluate run
+      --model models/champion/model.joblib
+      --test data/processed/test.parquet
+      --report-out reports/evaluation.json
+    deps:
+      - models/champion/model.joblib
+      - data/processed/test.parquet
+      - backend/app/ml/evaluate.py
+      - backend/app/ml/statistics.py
+      - backend/app/ml/calibration.py
+      - backend/app/ml/threshold.py
+      - backend/app/ml/cost_sensitive.py
+      - backend/app/ml/fairness.py
+      - params.yaml
+    params:
+      - evaluation.bootstrap
+      - evaluation.calibration
+      - evaluation.threshold
+      - evaluation.cost_matrix
+      - evaluation.fairness
+    metrics:
+      - reports/evaluation.json:
+          cache: false
+    outs:
+      - reports/figures/calibration_pre.png:
+          cache: false
+      - reports/figures/calibration_post.png:
+          cache: false

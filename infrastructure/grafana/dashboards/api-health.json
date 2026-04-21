@@ -1,0 +1,84 @@
+{
+  "uid": "student-dropout-api",
+  "title": "Student Dropout — API & Model Health",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "tags": ["mlops", "student-dropout"],
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Model macro-F1 (production)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "expr": "model_macro_f1", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0, "max": 1, "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 0.75 },
+              { "color": "green", "value": 0.85 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Latest drift share",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "targets": [{ "expr": "drift_score", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0, "max": 1, "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.2 },
+              { "color": "red", "value": 0.3 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Predict latency (p95)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "targets": [{
+        "expr": "histogram_quantile(0.95, sum by (le) (rate(predict_latency_seconds_bucket[5m])))",
+        "refId": "A",
+        "legendFormat": "p95 latency"
+      }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Predictions per minute by risk level",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "targets": [{
+        "expr": "sum by (risk_level) (rate(prediction_total[5m])) * 60",
+        "refId": "A",
+        "legendFormat": "{{risk_level}}"
+      }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Retrain runs (rolling sum)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
+      "targets": [{
+        "expr": "sum by (outcome) (increase(retrain_runs_total[1h]))",
+        "refId": "A",
+        "legendFormat": "{{outcome}}"
+      }]
+    }
+  ]
+}
